@@ -4,17 +4,50 @@
 #include "freeetos/task.h"
 #include "driver/gpio.h"
 
+// Ignition Pins
 #define D_SEAT GPIO_NUM_4
 #define P_SEAT GPIO_NUM_5
 #define D_SEATBELT GPIO_NUM_6
 #define P_SEATBELT GPIO_NUM_7
-
 #define IGNITION_LED GPIO_NUM_9
 #define ENGINE_LED GPIO_NUM_10
-
 #define BUZZER GPIO_NUM_11
 #define IGNITION GPIO_NUM_12
 
+// LCD Pins
+#define LCD_RS GPIO_NUM_38
+#define LCD_E  GPIO_NUM_37
+#define LCD_D4 GPIO_NUM_36
+#define LCD_D5 GPIO_NUM_35
+#define LCD_D6 GPIO_NUM_48
+#define LCD_D7 GPIO_NUM_47
+
+// Servo 
+#define SERVO_GPIO     GPIO_NUM_21
+
+#define LEDC_TIMER     LEDC_TIMER_0
+#define LEDC_MODE      LEDC_LOW_SPEED_MODE
+#define LEDC_CHANNEL   LEDC_CHANNEL_0
+#define LEDC_DUTY_RES  LEDC_TIMER_13_BIT
+#define LEDC_FREQUENCY 50
+
+#define LEDC_DUTY_MIN  307
+#define LEDC_DUTY_MAX  921
+
+#define LOOP_MS        10
+
+// ADC 
+#define ADC_ATTEN   ADC_ATTEN_DB_12
+#define BITWIDTH    ADC_BITWIDTH_12
+
+#define MODE_ADC_CH   ADC_CHANNEL_2   // GPIO3
+#define DELAY_ADC_CH  ADC_CHANNEL_7   // GPIO8
+
+adc_oneshot_unit_handle_t adc1_handle;
+adc_cali_handle_t cali_mode_handle;
+adc_cali_handle_t cali_delay_handle;
+
+hd44780_t lcd;
 
 void app_main(void)
 {
