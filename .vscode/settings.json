@@ -12,5 +12,7 @@
     "--background-index",
     "--query-driver=**",
     "--compile-commands-dir=c:\\Users\\nijuk\\OneDrive\\Desktop\\Project3\\build"
-  ]
+  ],
+  "idf.portWin": "COM4",
+  "idf.flashType": "UART"
 }
