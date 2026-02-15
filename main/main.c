@@ -70,6 +70,9 @@ hd44780_t lcd;
 
 //INIT FUNCTIONS 
 
+// gpio_init_all():
+// Sets all seat switches and ignition button as INPUT with pullups.
+// Sets LEDs and buzzer as OUTPUT and turns them OFF.
 void gpio_init_all(void)
 {
     gpio_reset_pin(D_SEAT);
@@ -105,6 +108,8 @@ void gpio_init_all(void)
     gpio_set_level(ENGINE_LED, 0);
 }
 
+// lcd_init_simple()
+//Initializes the LCD in 4-bit mode and clears the display.
 void lcd_init_simple(void)
 {
     lcd = (hd44780_t){
@@ -126,6 +131,8 @@ void lcd_init_simple(void)
     hd44780_clear(&lcd);
 }
 
+// servo_init()
+// Configures PWM at 50 Hz for the servo motor.
 void servo_init(void)
 {
     ledc_timer_config_t timer = {
@@ -149,6 +156,9 @@ void servo_init(void)
     ledc_channel_config(&channel);
 }
 
+// servo_set_angle(angle)
+// Moves the wiper servo to an angle between 0 and 90 degrees.
+// The PWM range corresponds to about 0 to 180 degrees,so we divide by 180 to map correctly.
 void servo_set_angle(float angle)
 {
     if (angle < 0) angle = 0;
@@ -162,6 +172,8 @@ void servo_set_angle(float angle)
     ledc_update_duty(LEDC_MODE, LEDC_CHANNEL);
 }
 
+// adc_init_simple()
+// Initializes ADC in oneshot mode for the mode and delay potentiometers.
 void adc_init_simple(void)
 {
     adc_oneshot_unit_init_cfg_t init_config1 = {
@@ -193,8 +205,9 @@ void adc_init_simple(void)
     adc_cali_create_scheme_curve_fitting(&cal_delay, &cali_delay_handle);
 }
 
-// MAIN
-
+// app_main()
+// Main control loop for the ignition and windshield wiper subsystems.
+// Runs continuously with a short delay to avoid blocking.
 void app_main(void)
 {
     gpio_init_all();
@@ -250,15 +263,15 @@ void app_main(void)
 
     while (1)
     {
-        // READ INPUTS (active-low)
+        //READ INPUTS (active-low)
         d_seat = (gpio_get_level(D_SEAT) == 0);
         p_seat = (gpio_get_level(P_SEAT) == 0);
         d_belt = (gpio_get_level(D_SEATBELT) == 0);
         p_belt = (gpio_get_level(P_SEATBELT) == 0);
         ignit  = (gpio_get_level(IGNITION) == 0);
 
-        // WELCOME (SHOW ONLY ONCE)
-        // LCD starts blank. First time driver sits down, show welcome and hold it until ignition press.
+        //WELCOME (SHOW ONLY ONCE)
+        //LCD starts blank. First time driver sits down, show welcome and hold it until ignition press.
         if (!welcome_already_shown)
         {
             if (d_seat && !last_d_seat)
@@ -275,7 +288,7 @@ void app_main(void)
         }
         last_d_seat = d_seat;
 
-        // If driver not seated, engine off, and not showing inhibit show blank
+        //If driver not seated, engine off, and not showing inhibit show blank
         if (!engine_running && !d_seat && lcd_state != 3)
         {
             if (lcd_state != 0)
@@ -285,7 +298,7 @@ void app_main(void)
             }
         }
 
-        //IGNITION ENABLE + LEDs
+        //Ignition is enabled only if both seats are occupied and both belts are fastened.
         ignition_enabled = (d_seat && p_seat && d_belt && p_belt);
 
         if (!engine_running && ignition_enabled)
@@ -469,6 +482,9 @@ void app_main(void)
         }
 
         //WIPER MOTION LOGIC
+
+        // Wipers run only if engine is running and mode is not OFF.
+        // If engine turns off, finish current sweep and park at 0 degrees.
         int run_request = 0;
         if (engine_running && (wiper_mode != 0))
         {
