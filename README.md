@@ -1,20 +1,36 @@
 # Project 3: Windshield Wiper Subsystem
-Team Members: Madisen Bailey, Vivaan Gupta, Niju Khanal
 
-## Project Description
-This project implements an enhanced Driver’s Education Smart Car system that integrates ignition control and a windshield wiper subsystem to simulate realistic vehicle behavior. When the driver sits down, a welcome message is displayed once, and ignition is enabled only when required safety conditions (seat occupancy and seatbelt fastening) are met. When these conditions are satisfied, the yellow LED turns on to indicate ignition is ready. If the ignition button is pressed while enabled, the engine starts, the blue LED illuminates, and a confirmation message is displayed. If conditions are not satisfied, the system inhibits ignition, sounds the buzzer, and displays the specific reasons on the LCD. The engine remains running until the ignition button is pressed again.
+Team Members: Madisen Bailey, Vivaan Gupta, Niju Khanal  
+---
 
-The windshield wiper subsystem operates only when the engine is running and supports HI, LO, INT, and OFF modes. In INT mode, the delay time (SHORT, MEDIUM, LONG) is selected via potentiometer and displayed on the LCD. When switched to OFF or when the engine is turned off, the wipers complete their current cycle and return to 0 degrees.
+## System Description
+
+This project expands the Driver’s Education Smart Car system to include a windshield wiper subsystem in addition to the ignition subsystem.
+
+The ignition subsystem enables engine start only when both seats are occupied and both seatbelts are fastened. When these safety conditions are satisfied, the yellow LED indicates ignition readiness. If the ignition button is pressed while enabled, the engine starts, the blue LED turns on, and the LCD displays “Engine started.” If the safety conditions are not met, ignition is inhibited, the buzzer sounds, and the LCD displays “Ignition inhibited” along with the specific safety violations. Once started, the engine remains running until the ignition button is pressed again.
+
+The windshield wiper subsystem operates only when the engine is running and supports four modes: HI, LO, INT, and OFF. In HI and LO modes, the wipers continuously sweep between 0° and a maximum angle at different speeds. In INT mode, the wipers operate at low speed and pause at 0° for a selected delay time (SHORT, MEDIUM, or LONG). When switched to OFF or when the engine is turned off, the wipers complete their current cycle and return to 0°.
+
+---
 
 ## Design Alternatives
-Several design approaches were considered during development. We evaluated using one large unified state machine versus modular subsystem logic; we chose a modular design to improve readability, debugging, and independent operation of the ignition and wiper systems while still responding to engine state. For mode and delay selection, we selected potentiometers with ADC threshold detection instead of multiple digital switches to reduce hardware complexity. For intermittent wiping, we used non-blocking timing rather than blocking delays so the system remains responsive during delay periods. Finally, instead of stopping the wipers immediately when switched OFF or when the engine turns off, we implemented logic to complete the current cycle and return to 0 degrees to better simulate realistic automotive behavior.
 
+### Motor Selection
+The project allowed the choice between a continuous rotation servo and a positional servo motor. We selected a standard positional servo motor because it allows direct control of the wiper angle and guarantees returning to a known rest position (0°). A continuous servo would only allow speed control without fixed positioning, making it more difficult to implement correct shutdown behavior.
+
+### ADC Threshold Mapping
+We divided the ADC range into threshold intervals corresponding to the required number of modes (HI, LO, INT, OFF) and delay settings (SHORT, MEDIUM, LONG). This simplified the selection logic and ensured stable mode detection without requiring precise knob positioning.
+
+### Initialization Structure
+Instead of placing all configuration code directly inside app_main(), we separated hardware setup into initialization functions (GPIO, PWM/servo, ADC, and LCD setup). This improved readability, reduced repetition, and allowed the main loop to focus on system behavior and control logic.
+
+---
 ## Testing Results
 
 ### Ignition Subsystem
 | Specification | Test Process | Results |
 | --- | --- | --- |
-| Enable engine start (yellow LED) only when required safety conditions are met. | <ol><li>Turn ON all seat and seatbelt slider switches..</li><li>Leave one safety condition unmet.</li><li>Leave all conditions unmet.</li></ol> | <ol><li>Yellow LED illuminated when all conditions were satisfied.</li><li>Yellow LED remained off when any condition was missing.</li><li>Ignition was not enabled when no conditions were satisfied.</li></ol> |
+| Enable engine start (yellow LED) only when required safety conditions are met. | <ol><li>Press all seat and seatbelt buttons.</li><li>Leave one safety condition unmet.</li><li>Leave all conditions unmet.</li></ol> | <ol><li>Yellow LED illuminated when all conditions were satisfied.</li><li>Yellow LED remained off when any condition was missing.</li><li>Ignition was not enabled when no conditions were satisfied.</li></ol> |
 | Print appropriate error messages if ignition is attempted without all safety conditions met. | <ol><li>Leave one or more safety conditions unmet.</li><li>Press ignition button.</li></ol> | <ol><li>Alarm activated.</li><li>LCD displayed correct error messages (e.g., “Passenger seat not occupied,” “Driver seatbelt not fastened”).</li></ol> |
 | Start engine when ignition is enabled and ignition button is pressed. | <ol><li>Satisfy all safety conditions (yellow LED on).</li><li>Press ignition button.</li></ol> | <ol><li>Blue LED illuminated.</li><li>Yellow LED turned off.</li><li>“Engine started” message displayed.</li><li>Engine remained running after button release.</li></ol> |
 | Stop engine when ignition button is pressed while engine is running. | <ol><li>Engine running (blue LED on).</li><li>Press ignition button.</li></ol> | <ol><li>Engine stopped.</li><li>Blue LED turned off.</li></ol> |
